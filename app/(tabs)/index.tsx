@@ -18,10 +18,7 @@ export default function App() {
 		{
 			clientId: "140703",
 			scopes: ["activity:read_all"],
-			redirectUri: makeRedirectUri({
-				// the "redirect" must match your "Authorization Callback Domain" in the Strava dev console.
-				native: "http://oauthredirect",
-			}),
+			redirectUri: "myapp://vertrun",
 		},
 		discovery
 	)
