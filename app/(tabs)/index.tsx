@@ -1,74 +1,47 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { useEffect } from "react"
+import * as WebBrowser from "expo-web-browser"
+import { makeRedirectUri, useAuthRequest } from "expo-auth-session"
+import { Button, View } from "react-native"
+import Constants from "expo-constants"
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+WebBrowser.maybeCompleteAuthSession()
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+// Endpoint
+const discovery = {
+	authorizationEndpoint: "https://www.strava.com/oauth/mobile/authorize",
+	tokenEndpoint: "https://www.strava.com/oauth/token",
+	revocationEndpoint: "https://www.strava.com/oauth/deauthorize",
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+export default function App() {
+	const [request, response, promptAsync] = useAuthRequest(
+		{
+			clientId: "140703",
+			scopes: ["activity:read_all"],
+			redirectUri: makeRedirectUri({
+				// the "redirect" must match your "Authorization Callback Domain" in the Strava dev console.
+				native: "http://oauthredirect",
+			}),
+		},
+		discovery
+	)
+
+	useEffect(() => {
+		if (response?.type === "success") {
+			const { code } = response.params
+			console.log({ response })
+		}
+	}, [response])
+
+	return (
+		<View style={{ marginTop: Constants.statusBarHeight }}>
+			<Button
+				disabled={!request}
+				title='Login'
+				onPress={() => {
+					promptAsync()
+				}}
+			/>
+		</View>
+	)
+}
